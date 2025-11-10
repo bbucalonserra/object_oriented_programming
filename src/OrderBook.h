@@ -37,6 +37,12 @@ class OrderBook {
         //
         std::string getNextTime(std::string timestamp);
 
+        //
+        void insertOrder(OrderBookEntry & order);
+
+        //
+        std::vector<OrderBookEntry> matchAsksToBids(std::string product, std::string timestamp);
+
 
     private:
         // Para armazenar as ordens. Aqui devemos declarar ele pois cada objeto que criar dessa classe vai ter seu próprio vetor (cada linha ACHO).
