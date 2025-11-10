@@ -25,7 +25,6 @@ class MerkelMain
         int getUserOption();
         void processUserOption(int userOption);
 
-
         std::string currentTime; // Nao tem "()" porque é uma variável.
 
         OrderBook orderBook{"20200317.csv"};
