@@ -9,7 +9,8 @@ OrderBookEntry::OrderBookEntry( double _price,
                         double _amount, 
                         std::string _timestamp, 
                         std::string _product, 
-                        OrderBookType _orderType)
+                        OrderBookType _orderType,
+                        std::string _username)
 
 
 // Aqui já são as variáveis internas da classe. São os espaços de memória permanentes da classe.
@@ -21,7 +22,8 @@ OrderBookEntry::OrderBookEntry( double _price,
   amount(_amount), 
   timestamp(_timestamp),
   product(_product), 
-  orderType(_orderType)
+  orderType(_orderType),
+  username(_username)
 
 // Abaixo é o bloco de código que será executado quando a função for chamada.
 // Quando não há instrução (abaixo, vazio), ele só inicializa com aquelas variáveis.

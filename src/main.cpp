@@ -5,11 +5,20 @@
 #include "MerkelMain.h"
 #include "CSVReader.h"
 
+
 int main()
 {
 
     MerkelMain app{};
     app.init();
+
+    // Wallet wallet;
+    // wallet.insertCurrency("BTC", 100000);
+    // wallet.insertCurrency("USDT", 10000);
+    // std::cout << wallet.toString() << std::endl;
+    // wallet.removeCurrency("USDT", 100);
+    // std::cout << wallet.toString() << std::endl;
+
 
 }
 

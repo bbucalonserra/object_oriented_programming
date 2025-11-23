@@ -6,7 +6,7 @@
 // Criando um tipo de dado chamado "OrderBookType" (que é uma classe), só aceitando bid, ask e unkonwn.
 // Nao é uma classe de verdade, o enum class serve apenas para criar um tipo com valores fixos nomeados.
 // Ele não cria memória para atributos, nem métodos.
-enum class OrderBookType{bid, ask, unknown, sale};
+enum class OrderBookType{bid, ask, unknown, asksale, bidsale};
 
 class OrderBookEntry
 {
@@ -19,7 +19,8 @@ class OrderBookEntry
                         double _amount, 
                         std::string _timestamp, 
                         std::string _product, 
-                        OrderBookType _orderType);
+                        OrderBookType _orderType,
+                        std::string username="dataset"); // se nao especificarmos, default dataset.
 
         // Existe uma função chamada stringToOrderBookType, que pertence à classe OrderBookEntry, recebe uma string e devolve um OrderBookType. 
         // Ela é estática (não depende de objeto).
@@ -32,6 +33,8 @@ class OrderBookEntry
         std::string timestamp;
         std::string product;
         OrderBookType orderType;
+        std::string username;
+
 
         //
         static bool compareByTimestamp(OrderBookEntry& e1, OrderBookEntry& e2) {

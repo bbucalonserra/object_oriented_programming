@@ -3,6 +3,7 @@
 #include <vector>
 #include "OrderBookEntry.h"
 #include "OrderBook.h"
+#include "Wallet.h"
 
 
 class MerkelMain
@@ -28,5 +29,7 @@ class MerkelMain
         std::string currentTime; // Nao tem "()" porque é uma variável.
 
         OrderBook orderBook{"20200317.csv"};
+
+        Wallet wallet{};
 
 }; 
