@@ -18,6 +18,7 @@
 #include <ctime>
 #include <fstream>
 
+
 MerkelMain::MerkelMain() {
     // Generate random number.
     std::srand(std::time(nullptr));
@@ -46,11 +47,6 @@ void MerkelMain::init() {
     }
 }
 
-// void MerkelMain::loadOrderBook() {
-//     orders = CSVReader::readCSV("20200317.csv"); 
-//     //orders = CSVReader::readCSV("big_data.csv"); 
-    
-// }
 
 void MerkelMain::printMenu() {
     // 1 print help
@@ -71,8 +67,20 @@ void MerkelMain::printMenu() {
     // 6 continue   
     std::cout << "6: Continue " << std::endl;
 
-    // Candlestick
+    // 7. Candlestick
     std::cout << "7: View Candlestick Stats" << std::endl;
+
+    // 8. Deposit Money.
+    std::cout << "8: Deposit money" << std::endl;
+
+    // 9. Withdraw money.
+    std::cout << "9: Withdraw money" << std::endl;
+
+    // 10. Print Trade History.
+    std::cout << "10: Print trade history." << std::endl;
+
+    // 11. Orubt Trading Stats.
+    std::cout << "11: Print trading stats." << std::endl;
 
     std::cout << "============== " << std::endl;
 
@@ -182,19 +190,39 @@ void MerkelMain::printWallet() {
 void MerkelMain::gotoNextTimeframe() {
     std::cout << "Going to next time frame. " << std::endl;
 
-    //
-    std::vector<OrderBookEntry> sales = orderBook.matchAsksToBids("ETH/BTC", currentTime);
-    std::cout << "Sales: " << sales.size() << std::endl;
-    for (OrderBookEntry& sale : sales) {
-        std::cout << "Sale price: " << sale.amount << " amount " << sale.amount << std::endl;
-        if (sale.username == "simuser") {
-            //update wallet.
-            userWallets[currentUser].processSale(sale);   
+    // 1. Processar trades para cada produto
+    for (std::string const& p : orderBook.getKnownProducts()) {
+        std::cout << "Matching " << p << std::endl;
+        
+        // Executa o motor de matching do OrderBook
+        std::vector<OrderBookEntry> sales = orderBook.matchAsksToBids(p, currentTime);
+        std::cout << "Sales: " << sales.size() << std::endl;
+
+        for (OrderBookEntry& sale : sales) {
+            std::cout << "Sale price: " << sale.price << " amount " << sale.amount << std::endl;
+            
+            // 2. Verificar se a venda pertence ao usuário logado (Requisito 1.6 e 3.2)
+            if (sale.username == "simuser") { // "simuser" é o marcador de ordens do usuário
+                
+                // Atualiza a carteira na RAM (Requisito 3.1)
+                userWallets[currentUser].processSale(sale);
+                
+                // 3. PERSISTÊNCIA: Logar a transação no CSV (Requisito 3.2)
+                std::ofstream file("transactions.csv", std::ios::app);
+                if (file.is_open()) {
+                    file << currentTime << "," 
+                         << currentUser << "," 
+                         << sale.product << "," 
+                         << (sale.orderType == OrderBookType::ask ? "ask" : "bid") << "," 
+                         << sale.price << "," 
+                         << sale.amount << std::endl;
+                    file.close();
+                }
+            }
         }
     }
 
-
-    // Aqui a cada vez que escolhe a opção 6, ele vai para o próximo.
+    // 5. Avançar o tempo
     currentTime = orderBook.getNextTime(currentTime);
 }
  
@@ -253,6 +281,20 @@ void MerkelMain::processUserOption(int userOption) {
     }
     if (userOption == 7) {
         printCandlestickStats();
+    }
+    if (userOption == 8) {
+        depositMoney();}
+    
+    if (userOption == 9) {
+        withdrawMoney();  
+    }
+
+    if (userOption == 10) {
+        printTradeHistory();
+    }
+
+    if (userOption == 11) {
+        printTradingStats();
     }
 }
 
@@ -395,28 +437,183 @@ void MerkelMain::loadUsers() {
 
     //
     while (std::getline(file, line)) {
-            // Using tokenize.
-            std::vector<std::string> tokens = CSVReader::tokenise(line, ',');
+        // Using tokenize.
+        std::vector<std::string> tokens = CSVReader::tokenise(line, ',');
+        
+        // Check if all information is properly filled.
+        // Changed to >= 4 to support both new users and users with saved balance (5 tokens).
+        if (tokens.size() >= 4) {
+            // ID (from tokenize).
+            std::string id = tokens[0];
             
-            // Check if all information is properly filled.
-            if (tokens.size() == 4) {
-                // ID (from tokenize).
-                std::string id = tokens[0];
-                
-                // ID (from tokenize).
-                std::string name = tokens[1];
-                
-                // ID (from tokenize).
-                std::string hash = tokens[3];
+            // Name (from tokenize).
+            std::string name = tokens[1];
+            
+            // Hash (from tokenize).
+            std::string hash = tokens[3];
 
-                // Connect ID with name.
-                userDatabase[id] = hash;
-                idToName[id] = name;
-            
-                // Create wallet for loaded users.
-                Wallet loadedWallet;
+            // Create wallet for loaded users.
+            Wallet loadedWallet;
+
+            // Check if there is wallet data (5th token)
+            if (tokens.size() == 5) {
+                // tokens[4] contains the wallet string (e.g.: "BTC:10.5,ETH:2.0")
+                std::string walletData = tokens[4];
+                
+                // 1. Split string by commas (to separate currencies)
+                std::vector<std::string> currenciesList = CSVReader::tokenise(walletData, ',');
+                
+                for (std::string& currData : currenciesList) {
+                    // 2. Split each currency by ":" (to separate name from amount)
+                    std::vector<std::string> pair = CSVReader::tokenise(currData, ':');
+                    if (pair.size() == 2) {
+                        std::string type = pair[0];
+                        double amount = std::stod(pair[1]);
+                        
+                        // 3. Insert into the loading user's wallet
+                        loadedWallet.insertCurrency(type, amount);
+                    }
+                }
+            } else {
                 loadedWallet.insertCurrency("BTC", 10.0); // Standard initial value.
-                userWallets[id] = loadedWallet;
+            }
+
+            // Connect ID with name and hash.
+            userDatabase[id] = hash;
+            idToName[id] = name;
+
+            // Save in map.
+            userWallets[id] = loadedWallet;
+        }
+    }
+};
+
+
+void MerkelMain::depositMoney() {
+    // Currency (ETH, BTC, USDT, DOGE).
+    std::cout << "Currency (ETH, BTC, USDT, DOGE): ";
+    std::string type; std::cin >> type;
+    
+    // Check if currency is allowed using enum logic.
+    CryptoType crypto = stringToCrypto(type);
+    if (crypto == CryptoType::UNKNOWN) {
+        std::cout << "Invalid currency! Only ETH, BTC, USDT, DOGE allowed." << std::endl;
+        return;
+    }
+
+    // Quantity.
+    std::cout << "Quantity: ";
+    double amount; std::cin >> amount;
+
+    // Update wallet in memory.
+    userWallets[currentUser].insertCurrency(type, amount);
+    
+    // 
+    double currentBalance = userWallets[currentUser].getCurrencyBalance(type);
+
+    // SAVE TO WALLET_ACTIVITY.CSV (Requirement 3.1: transaction history).
+    // Format: id, is_deposit (1), is_withdraw (0), currency, value
+    std::ofstream file("wallet_activity.csv", std::ios::app);
+    if (file.is_open()) {
+        file << currentUser << "," << "deposit" << "," << type << "," << amount << "," << currentBalance <<std::endl;
+        file.close();
+    }
+
+    // Print success.
+    std::cout << "The deposit is completed. New balance: " << currentBalance << " " << type << std::endl;
+}
+
+void MerkelMain::printTradeHistory() {
+    std::ifstream file("transactions.csv");
+    std::string line;
+    std::vector<std::string> history;
+    while (std::getline(file, line)) {
+        std::vector<std::string> tokens = CSVReader::tokenise(line, ',');
+        if (tokens[1] == currentUser) { // Filtra pelo utilizador atual
+            history.push_back(line);
+        }
+    }
+    std::cout << "--- Last 5 transactions ---" << std::endl;
+    int start = (history.size() > 5) ? history.size() - 5 : 0;
+    for (int i = start; i < history.size(); ++i) {
+        std::cout << history[i] << std::endl;
+    }
+}
+
+void MerkelMain::printTradingStats() {
+    double totalSpent = 0;
+    int totalBids = 0, totalAsks = 0;
+    
+    // Para a parte específica do requisito:
+    std::cout << "Enter product for specific stats (or 'all'): ";
+    std::string targetProduct;
+    std::getline(std::cin >> std::ws, targetProduct);
+
+    std::ifstream file("transactions.csv");
+    std::string line;
+    
+    while (std::getline(file, line)) {
+        std::vector<std::string> tokens = CSVReader::tokenise(line, ',');
+        if (tokens.size() >= 6 && tokens[1] == currentUser) {
+            std::string product = tokens[2];
+            std::string type = tokens[3];
+            double price = std::stod(tokens[4]);
+            double amount = std::stod(tokens[5]);
+
+            // Filtro por produto ou 'all'
+            if (targetProduct == "all" || targetProduct == product) {
+                if (type == "bid") {
+                    totalBids++;
+                    totalSpent += price * amount;
+                } else {
+                    totalAsks++;
+                }
             }
         }
-};
+    }
+
+    std::cout << "\n=== Trading Stats [" << targetProduct << "] ===" << std::endl;
+    std::cout << "User: " << idToName[currentUser] << std::endl;
+    std::cout << "Number of Bids: " << totalBids << std::endl;
+    std::cout << "Number of Asks: " << totalAsks << std::endl;
+    std::cout << "Total money spent (Bids): " << totalSpent << std::endl;
+    std::cout << "==============================" << std::endl;
+}
+
+void MerkelMain::withdrawMoney() {
+    std::cout << "Currency (ETH, BTC, USDT, DOGE): ";
+    std::string type; std::cin >> type;
+    
+    if (stringToCrypto(type) == CryptoType::UNKNOWN) {
+        std::cout << "Invalid currency!" << std::endl;
+        return;
+    }
+
+    std::cout << "Quantity: ";
+    double amount; std::cin >> amount;
+
+    // 1. Tenta remover da memória
+    if (userWallets[currentUser].removeCurrency(type, amount)) {
+        
+        // 2. Obtém o novo saldo para a coluna extra
+        double currentBalance = userWallets[currentUser].getCurrencyBalance(type);
+
+        // 3. Salva a atividade com a COLUNA EXTRA (Balance Atual)
+        std::ofstream file("wallet_activity.csv", std::ios::app);
+        if (file.is_open()) {
+            file << currentUser << "," << "withdraw" << "," << type << "," << amount << "," << currentBalance << std::endl; // Coluna extra
+            file.close();
+        }
+        std::cout << "Withdrawal completed. New balance: " << currentBalance << " " << type << std::endl;
+    } else {
+        std::cout << "Insufficient funds!" << std::endl;
+    }
+}
+
+CryptoType MerkelMain::stringToCrypto(std::string s) {
+    if (s == "ETH") return CryptoType::ETH;
+    if (s == "BTC") return CryptoType::BTC;
+    if (s == "USDT") return CryptoType::USDT;
+    if (s == "DOGE") return CryptoType::DOGE;
+    return CryptoType::UNKNOWN;
+}

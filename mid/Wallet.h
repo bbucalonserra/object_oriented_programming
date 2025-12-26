@@ -19,13 +19,19 @@ class Wallet {
         bool constainsCurrency(std::string type, double amount);
 
         /**Generate string representation of the wallet. */
-        std::string toString();
+        std::string toString() const;
 
         /**Checks if the wallet can cope with this ask or bid.*/
         bool canFulfillOrder(OrderBookEntry order);
 
         /**Update contents of the wallet. Assumes the order was made by the owner of the wallet.*/
         void processSale (OrderBookEntry& sale);
+
+        //
+        double getCurrencyBalance(std::string type) {
+        if (currencies.count(type) == 0) return 0;
+        return currencies[type];
+        }
 
     private:
         std::map<std::string, double> currencies;

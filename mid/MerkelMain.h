@@ -5,6 +5,8 @@
 #include "Wallet.h"
 #include <map>
 
+enum class CryptoType { ETH, BTC, USDT, DOGE, UNKNOWN };
+
 class MerkelMain
 {
     public:
@@ -28,7 +30,12 @@ class MerkelMain
         void login();
         void registerUser();
         void loadUsers();
-
+        void depositMoney();
+        void withdrawMoney();
+        void updateCSVBalance();
+        void printTradeHistory();
+        void printTradingStats();
+        CryptoType stringToCrypto(std::string s);
 
         // Nao tem "()" porque é uma variável.
         // Precisamos escrever as variáveis no header (.h) porque o compilador precisa saber quanta memória reservar para o objeto.

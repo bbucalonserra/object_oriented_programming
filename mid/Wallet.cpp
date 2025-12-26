@@ -60,7 +60,7 @@ bool Wallet::removeCurrency(std::string type, double amount) {
     }
 }
 
-std::string Wallet::toString() {
+std::string Wallet::toString() const {
     std::string s;
     for(std::pair<std::string, double> pair : currencies) {
         std::string currency = pair.first;
