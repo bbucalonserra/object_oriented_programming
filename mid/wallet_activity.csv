@@ -1,2 +1,10 @@
-
 98506201,deposit,BTC,100,110
+98506201,deposit,BTC,3,103
+98506201,simulated_trade,BTC,0.5,102.5
+98506201,simulated_trade,BTC,0.5,102
+98506201,simulated_trade,BTC,0.5,101.5
+98506201,simulated_trade,BTC,0.5,101
+98506201,simulated_trade,BTC,0.5,100.5
+98506201,deposit,ETH,100,100
+98506201,deposit,BTC,1,101.5
+98506201,withdraw,ETH,100,0

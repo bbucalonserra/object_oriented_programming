@@ -8,47 +8,52 @@
 
 class OrderBook {
     public:
-        // Constructor. Reading a CSV datafile.
+        /** Constructor: Initialises the system by reading from a specified CSV data file. */
         OrderBook(std::string filename);
 
-        // Retorna um vetor, que dentro do vetor so aceita strings.
+        /** Returns a vector containing all unique product identifiers (strings) found in the book. */
         std::vector<std::string> getKnownProducts();
 
-        // Retorna um vetor, que só retorna um vetor de OrderBookEntry, que é a função construtora da classe OrderBookEntry.
-        // Ou seja, ele retorna um objeto do tipo OrderBookEntry (que por sua vez retorna um "obe", que tem aquelas caracteristicas de cada linha).
+        /** * Retrieves a subset of orders based on type, product name, and timeframe.
+         * Returns a vector of OrderBookEntry objects, representing the filtered data.
+         */
         std::vector<OrderBookEntry> getOrders(OrderBookType type,
                                             std::string product,
                                             std::string timestamp
                                     );
 
-        // o símbolo & indica que o vetor é passado por referência, ou seja:
-        // - A função não cria uma cópia do vetor.
-        // - la usa diretamente o vetor original (o mesmo que foi passado).
-        // Sem usar o &, se o vetor tiver 1 milhão de elementos, ele duplica tudo na memória.
+        /** * Calculates the maximum price within the provided collection of orders.
+         * The '&' symbol indicates the vector is passed by reference, meaning:
+         * - The function operates directly on the original vector rather than creating a copy.
+         * - This is significantly more memory-efficient for large datasets (e.g., millions of rows).
+         */
         static double getHighPrice(std::vector<OrderBookEntry>& orders);
 
-
-        //
+        /** Calculates the minimum price within the provided collection of orders. */
         static double getLowPrice(std::vector<OrderBookEntry>& orders);
 
-        //
+        /** Identifies the earliest timestamp available in the order book. */
         std::string getEarliestTime();
 
-        //
+        /** Returns the subsequent chronological timestamp relative to the provided input. */
         std::string getNextTime(std::string timestamp);
 
-        //
+        /** Inserts a specific order entry into the existing collection. */
         void insertOrder(OrderBookEntry & order);
 
-        //
+        /** Matches compatible buy (bid) and sell (ask) orders to simulate trade execution. */
         std::vector<OrderBookEntry> matchAsksToBids(std::string product, std::string timestamp);
 
-        // Creating static function (static because it's not needed to create an object to use it.)
+        /** * Generates OHLC (Candlestick) data from a series of order entries.
+         * Declared as 'static' as it performs a pure calculation that does not 
+         * require an instance of the class to function.
+         */
         static std::vector<Candlestick> computeCandlesticks(std::vector<OrderBookEntry>& orders);
 
     private:
-        // Para armazenar as ordens. Aqui devemos declarar ele pois cada objeto que criar dessa classe vai ter seu próprio vetor (cada linha ACHO).
-        // Logo precisamos declara-lo novamente no .cpp.
+        /** * Internal storage for all order entries. This is declared here so that each 
+         * instance of the OrderBook class maintains its own unique collection of data.
+         */
         std::vector<OrderBookEntry> orders;
         
 };

@@ -1,32 +1,40 @@
-// Garantir que este arquivo de cabeçalho (.h) só seja incluído uma vez durante a compilação.
+/** Ensure this header file is included only once during the compilation process. */
 #pragma once
 #include <string>
 
-// Criando um tipo de dado chamado "OrderBookType" (que é uma classe), só aceitando bid, ask e unkonwn.
-// Nao é uma classe de verdade, o enum class serve apenas para criar um tipo com valores fixos nomeados.
-// Ele não cria memória para atributos, nem métodos.
+/** * Defines a custom data type 'OrderBookType' using a scoped enum.
+ * It restricts values to a predefined set: bid, ask, unknown, asksale, and bidsale.
+ * Note: An 'enum class' provides named constants without allocating memory for 
+ * methods or attributes.
+ */
 enum class OrderBookType{bid, ask, unknown, asksale, bidsale};
 
 class OrderBookEntry
 {
     public:
 
-        // Aqui, estamos dizendo: “Quando alguém quiser criar um OrderBookEntry, ele tem que me entregar 5 valores.”
-        // Literalmente apenas parâmetros.
-        // Isto é uma DECLARAÇÃO DE MÉTODO DENTRO DA CLASSE. Como já está dentro de OrderBookEntry, compilador já sabe que é daquela classe.
-        OrderBookEntry( double _price, // O "_" não significa nada, é apenas representativo.
+        /** * Constructor Declaration: To instantiate an OrderBookEntry, five primary 
+         * values must be provided as parameters.
+         * The underscore (e.g., _price) is a naming convention to distinguish 
+         * parameters from internal member variables.
+         * @param username Defaults to "dataset" if no specific identifier is provided.
+         */
+        OrderBookEntry( double _price, 
                         double _amount, 
                         std::string _timestamp, 
                         std::string _product, 
                         OrderBookType _orderType,
-                        std::string username="dataset"); // se nao especificarmos, default dataset.
+                        std::string username="dataset"); 
 
-        // Existe uma função chamada stringToOrderBookType, que pertence à classe OrderBookEntry, recebe uma string e devolve um OrderBookType. 
-        // Ela é estática (não depende de objeto).
-        // OrderBookType é o tipo (no caso enum que veio da classe OrderBookType), se chama stringToOrderBookType e deve receber uma string s.
-        static OrderBookType stringToOrderBookType(std::string s); // static significa que nao precisa criar objeto antes (o "objeto_xx = xxx")
-        // Aqui já são as variáveis internas da classe. São os espaços de memória permanentes da classe.
-        // Se tem-se um dataset com milhões ou bilhões de linhas, cada linha virará um objeto.
+        /** * A static utility function that converts a string literal into an 
+         * OrderBookType enum. Being 'static' means it can be invoked without 
+         * the need to instantiate a specific object.
+         */
+        static OrderBookType stringToOrderBookType(std::string s); 
+
+        /* Internal member variables (attributes): These represent the permanent 
+           memory allocated to each class instance. In a large dataset, each 
+           row effectively becomes a unique object in memory. */
         double price;
         double amount;
         std::string timestamp;
@@ -34,18 +42,17 @@ class OrderBookEntry
         OrderBookType orderType;
         std::string username;
 
-
-        //
+        /** Static comparator to sort entries chronologically by timestamp. */
         static bool compareByTimestamp(OrderBookEntry& e1, OrderBookEntry& e2) {
             return e1.timestamp < e2.timestamp;
         };
 
-        //
+        /** Static comparator to sort entries by price in ascending order. */
         static bool compareByPriceAsc(OrderBookEntry& e1, OrderBookEntry& e2) {
             return e1.price < e2.price;
         };
 
-        //
+        /** Static comparator to sort entries by price in descending order. */
         static bool compareByPriceDesc(OrderBookEntry& e1, OrderBookEntry& e2) {
             return e1.price > e2.price;
         };
@@ -55,21 +62,21 @@ class OrderBookEntry
 
 /*
 ---------------------------------------------
-RESUMO COMPLETO DE UMA CLASSE COMO EXEMPLO.
+COMPREHENSIVE CLASS STRUCTURE SUMMARY
 ---------------------------------------------
 
-class NomeDaClasse {
+class ClassName {
 public:
-    // 1. Construtor (mesmo nome da classe, É OPCIONAL)
-    NomeDaClasse(tipo1 param1, tipo2 param2);
+    // 1. Constructor (Matches class name; optional for object initialisation)
+    ClassName(type1 param1, type2 param2);
 
-    // 2. Outras funções (métodos)
-    tipo_retorno funcao1();
-    void funcao2(tipo x);
+    // 2. Member Functions (Methods)
+    return_type function1();
+    void function2(type x);
 
-    // 3. Variáveis (atributos)
-    tipo1 atributo1;
-    tipo2 atributo2;
+    // 3. Member Variables (Attributes)
+    type1 attribute1;
+    type2 attribute2;
 };
 
 ---------------------------------------------

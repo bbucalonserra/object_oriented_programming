@@ -1,10 +1,11 @@
 #include "OrderBookEntry.h"
 
-// Aqui, estamos dizendo: “Quando alguém quiser criar um OrderBookEntry, ele tem que me entregar 5 valores.”
-// Literalmente apenas parâmetros.
-// Abaixo é a definição do método fora da classe.
-// O motivo de ter que escrever duas vezes double _price etc. é que o compilador de C++ trata declaração (.h) e definição (cpp) como instruções independentes.
-// Chamamos de assinatura o que vem do .h.
+/** * Constructor definition: This instructs the compiler that to instantiate an OrderBookEntry, 
+ * five specific parameters must be provided. 
+ * * Note: The repetition of parameter types (e.g., double _price) between the header (.h) 
+ * and implementation (.cpp) is necessary because the C++ compiler treats the 
+ * declaration (the 'signature') and the definition as independent instructions.
+ */
 OrderBookEntry::OrderBookEntry( double _price,
                         double _amount, 
                         std::string _timestamp, 
@@ -12,12 +13,13 @@ OrderBookEntry::OrderBookEntry( double _price,
                         OrderBookType _orderType,
                         std::string _username)
 
-
-// Aqui já são as variáveis internas da classe. São os espaços de memória permanentes da classe.
-// Se tem-se um dataset com milhões ou bilhões de linhas, cada linha virará um objeto.
-// Optou-se por usar ":", que é uma lista, porque assim as variáveis já são criadas com o valor certo (ou seja, com o qual for passado).
-// Se fosse diferente, primeiro ele criaria os atributos vazios (price, amount, etc.) e depois sobrescreve os valores recebidos.
-// Não muda nada, apenas é mais performático.
+/** * Initialisation List: We utilise the colon (:) operator here to map parameters to 
+ * the internal member variables (the permanent memory allocated to the class).
+ * * Performance Note: In datasets containing millions of entries, using an initialisation 
+ * list is more efficient. It ensures variables are created with the correct values 
+ * immediately, rather than being default-initialised and subsequently reassigned 
+ * within the function body.
+ */
 : price(_price), 
   amount(_amount), 
   timestamp(_timestamp),
@@ -25,16 +27,18 @@ OrderBookEntry::OrderBookEntry( double _price,
   orderType(_orderType),
   username(_username)
 
-// Abaixo é o bloco de código que será executado quando a função for chamada.
-// Quando não há instrução (abaixo, vazio), ele só inicializa com aquelas variáveis.
+/** * Function Body: This block executes logic upon instantiation. Since the 
+ * initialisation list handles all variable assignments, the body remains empty.
+ */
 {
     
 }
 
-// OrderBookType é o tipo da função. Aqui ele sabe que é enum pois foi declarado no .h.
-// Voce declara um objeto chamado OrderBookType que é um enum class.
-// A estrutura é: <tipo_de_retorno> <escopo>::<nome_da_função>(<parâmetros>)
-// AQUI NAO CRIOU OBJETO porque a função é STATIC.
+/** * Static Helper: Converts a string literal into a structured OrderBookType enum.
+ * * The structure follows: <return_type> <scope>::<function_name>(<parameters>).
+ * Note: As this is a 'static' method, it belongs to the class itself rather than 
+ * a specific object instance, allowing it to be called without instantiating the class.
+ */
 OrderBookType OrderBookEntry::stringToOrderBookType(std::string s)
 {
   if (s == "ask")
@@ -47,4 +51,3 @@ OrderBookType OrderBookEntry::stringToOrderBookType(std::string s)
   }
   return OrderBookType::unknown;
 }
- 
