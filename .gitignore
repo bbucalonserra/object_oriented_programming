@@ -39,3 +39,25 @@
 
 # debug information files
 *.dwo
+
+# Ignorar pastas de compilação e cache do Visual Studio
+.vs/
+Debug/
+Release/
+x64/
+*.user
+*.sln
+*.vcxproj
+*.filters
+
+# Ignorar arquivos temporários do sistema
+.DS_Store
+Thumbs.db
+
+# Ignorar pastas geradas pelo Projucer (se você quiser salvar apenas o código puro)
+/Builds/
+/JuceLibraryCode/
+
+# Garantir que a pasta Source e seu conteúdo NUNCA sejam ignorados
+!/Source/
+!/Source/**

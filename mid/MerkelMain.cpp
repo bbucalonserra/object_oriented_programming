@@ -80,6 +80,7 @@ void MerkelMain::printMenu() {
     // 6 continue   
     std::cout << "6: Continue " << std::endl;
 
+//------------------------------------------------ START NEW CODE ------------------------------------------------ 
     // 7. Candlestick
     std::cout << "7: View Candlestick Stats" << std::endl;
 
@@ -97,6 +98,8 @@ void MerkelMain::printMenu() {
 
     // 12. Simulate trending,
     std::cout << "12: Simulate Trading." << std::endl;
+
+    //------------------------------------------------ END NEW CODE ------------------------------------------------ 
 
     std::cout << "============== " << std::endl;
 
@@ -348,6 +351,8 @@ void MerkelMain::processUserOption(int userOption) {
     }
 }
 
+
+//------------------------------------------------ START NEW CODE ------------------------------------------------ 
 /** * Computes and displays OHLC (Open, High, Low, Close) price data 
  * for a specific asset over a requested timeframe, facilitating 
  * technical analysis for the user.
@@ -808,3 +813,4 @@ void MerkelMain::loadUserWallet()
         std::cout << "Wallet loaded from persistent storage." << std::endl;
     }
 }
+//------------------------------------------------ END NEW CODE ------------------------------------------------ 

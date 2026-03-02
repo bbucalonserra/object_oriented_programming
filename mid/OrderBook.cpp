@@ -180,6 +180,8 @@ std::vector<OrderBookEntry> OrderBook::matchAsksToBids(std::string product, std:
     return sales;
 };
 
+//------------------------------------------------ START NEW CODE ------------------------------------------------ 
+
 
 /** * Computes Candlestick metrics (OHLC) from a vector of orders. 
  * Note the use of a reference (&) to avoid unnecessary memory duplication.
@@ -211,3 +213,4 @@ std::vector<Candlestick> OrderBook::computeCandlesticks(std::vector<OrderBookEnt
 
     return candlesticks;
 }
+//------------------------------------------------ END NEW CODE ------------------------------------------------ 

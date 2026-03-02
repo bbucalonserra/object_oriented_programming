@@ -3,6 +3,8 @@
 #include <iostream>
 #include "CSVReader.h"
 
+//------------------------------------------------ START NEW CODE ------------------------------------------------ 
+
 /** Default constructor for the Wallet class. */
 Wallet::Wallet() {
     
@@ -74,6 +76,8 @@ std::string Wallet::toString() const {
     }
     return s;
 };
+
+//------------------------------------------------ END NEW CODE ------------------------------------------------ 
 
 /** Determines if the wallet has enough funds to cover a potential bid or ask order. */
 bool Wallet::canFulfillOrder(OrderBookEntry order) {
