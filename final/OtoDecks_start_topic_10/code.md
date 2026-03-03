@@ -1,3 +1,5 @@
+search bar adicionada como extra.
+
 # Created and Modified Code
 
 ## File DJAudioPlayer.cpp

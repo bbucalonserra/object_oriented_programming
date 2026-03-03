@@ -16,7 +16,13 @@ PlaylistComponent::PlaylistComponent(DeckGUI* _deck1, DeckGUI* _deck2): deck1(_d
     addAndMakeVisible(tableComponent);
     addAndMakeVisible(importButton);
 
+    //
     importButton.addListener(this);
+
+    //
+    addAndMakeVisible(searchInput);
+    searchInput.addListener(this);
+    searchInput.setTextToShowWhenEmpty("Search tracks...", juce::Colours::lightgrey);
 
     // Read saves file when opening the app.
     loadLibrary();
@@ -31,8 +37,9 @@ void PlaylistComponent::paint(juce::Graphics& g)
 
 void PlaylistComponent::resized()
 {
-    // Button on the top (10%) and table below (90%). 
-    importButton.setBounds(0, 0, getWidth(), getHeight() / 10);
+    // Button on the top and table below. 
+    importButton.setBounds(0, 0, getWidth() / 2, getHeight() / 10);
+    searchInput.setBounds(getWidth() / 2, 0, getWidth() / 2, getHeight() / 10);
     tableComponent.setBounds(0, getHeight() / 10, getWidth(), (getHeight() / 10) * 9);
 }
 
@@ -105,6 +112,9 @@ void PlaylistComponent::buttonClicked(juce::Button* button)
                 tracks.push_back(newTrack);
             }
 
+            // Music.
+            allTracks = tracks;
+
             // Tells table to update the list in the screen.
             tableComponent.updateContent();
 
@@ -144,22 +154,26 @@ juce::Component* PlaylistComponent::refreshComponentForCell(int rowNumber, int c
 
                     } else if (columnId == 6) {
                         
-                        juce::MessageManager::callAsync([this, row]() 
-                        {
-                            if (row < tracks.size()) 
-                            {
-                                tracks.erase(tracks.begin() + row);
-                                tableComponent.updateContent();
-                                saveLibrary();
+                        juce::MessageManager::callAsync([this, row]() {
+                            if (row < tracks.size()) {
+
+                            // Deletes backup.
+                            for (int i = 0; i < allTracks.size(); ++i) {
+                                if (allTracks[i].url == tracks[row].url) {
+                                    allTracks.erase(allTracks.begin() + i);
+                                    break;
+                                }
+                            }
+                            // Delete from screen.
+                            tracks.erase(tracks.begin() + row);
+                            tableComponent.updateContent();
+                            saveLibrary();
                             }
                         });
-                        
                     }
                 };
-
         return btn;
     }
-
     return nullptr;
 }
 
@@ -222,7 +236,28 @@ void PlaylistComponent::loadLibrary()
               }
             }
         }
+
+        // Music.
+        allTracks = tracks;
+
         // Updates table with new loaded data. 
         tableComponent.updateContent();
     }
+}
+
+void PlaylistComponent::textEditorTextChanged(juce::TextEditor& editor)
+{
+    if (searchInput.getText().isEmpty()) {
+        // Restores everything if erase text.
+        tracks = allTracks;
+    } else {
+        tracks.clear(); 
+        for (const auto& track : allTracks) {
+            // Compares the name of the music with what was written.
+            if (track.title.containsIgnoreCase(searchInput.getText())) {
+                tracks.push_back(track);
+            }
+        }
+    }
+    tableComponent.updateContent();
 }

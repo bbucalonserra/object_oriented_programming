@@ -22,7 +22,8 @@ struct Track {
  */
 class PlaylistComponent : public juce::Component,
                           public juce::TableListBoxModel,
-                          public juce::Button::Listener
+                          public juce::Button::Listener,
+                          public juce::TextEditor::Listener
 {
 public:
     PlaylistComponent(DeckGUI* deck1, DeckGUI* deck2);
@@ -54,6 +55,15 @@ public:
 
     /** Reads the disk and build the vector of tracks before initialization. */
     void loadLibrary();
+    
+    /** XXX */
+    juce::TextEditor searchInput;
+
+    /** XXX */
+    std::vector<Track> allTracks;
+
+    /** */
+    void textEditorTextChanged(juce::TextEditor& editor) override;
 
 private:
     juce::TableListBox tableComponent;

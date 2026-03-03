@@ -52,6 +52,14 @@ private:
     TextButton playButton{"PLAY"};
     TextButton stopButton{"STOP"};
     TextButton loadButton{"LOAD"};
+
+    juce::TextButton cueButtons[8];
+    juce::TextButton clearCuesButton{"Clear"};
+    double cuePositions[8];
+
+    juce::URL currentURL;
+    void saveCues();
+    void loadCues(juce::URL trackURL);
   
     Slider volSlider; 
     Slider speedSlider;

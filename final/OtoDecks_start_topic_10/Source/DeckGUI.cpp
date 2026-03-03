@@ -29,6 +29,20 @@ DeckGUI::DeckGUI(DJAudioPlayer* _player,
 
     addAndMakeVisible(waveformDisplay);
 
+    // Clear Buttom
+    addAndMakeVisible(clearCuesButton);
+    clearCuesButton.addListener(this);
+
+    // Prepare 8 buttons Hot Cue
+    for (int i = 0; i < 8; ++i) {
+        cueButtons[i].setButtonText("Cue " + juce::String(i + 1)); 
+        addAndMakeVisible(cueButtons[i]);
+        cueButtons[i].addListener(this);
+        
+        // Define initial time as -1.0 (empty button).
+        cuePositions[i] = -1.0; 
+    }
+
 
     playButton.addListener(this);
     stopButton.addListener(this);
@@ -93,6 +107,16 @@ void DeckGUI::resized()
     waveformDisplay.setBounds(0, rowH * 5, getWidth(), rowH * 2);
     loadButton.setBounds(0, rowH * 7, getWidth(), rowH);
 
+
+    // Draw line from hot cues.
+    int cueY = getHeight() - 30; 
+    int cueWidth = getWidth() / 9; 
+
+    for (int i = 0; i < 8; ++i) {
+        cueButtons[i].setBounds(i * cueWidth, cueY, cueWidth, 30);
+    }
+    clearCuesButton.setBounds(8 * cueWidth, cueY, cueWidth, 30);
+
 }
 
 void DeckGUI::buttonClicked(Button* button)
@@ -109,18 +133,68 @@ void DeckGUI::buttonClicked(Button* button)
 
     }
     if (button == &loadButton)
-    {
-       auto fileChooserFlags = 
-        FileBrowserComponent::canSelectFiles;
-        fChooser.launchAsync(fileChooserFlags, [this](const FileChooser& chooser)
         {
-            File chosenFile = chooser.getResult();
-            if (chosenFile.exists()){
-                player->loadURL(URL{chooser.getResult()});
-                waveformDisplay.loadURL(URL{chooser.getResult()});
+            auto fileChooserFlags = juce::FileBrowserComponent::canSelectFiles;
+            fChooser.launchAsync(fileChooserFlags, [this](const juce::FileChooser& chooser)
+            {
+                juce::File chosenFile = chooser.getResult();
+                if (chosenFile.exists()){
+                    
+                    juce::URL fileURL = juce::URL{chosenFile};
+                    player->loadURL(fileURL);
+                    waveformDisplay.loadURL(fileURL);
+                    
+                    loadCues(fileURL); 
+                }
+            });
+        }
+
+    for (int i = 0; i < 8; ++i)
+    {
+        if (button == &cueButtons[i])
+        {
+            if (cuePositions[i] == -1.0 || juce::ModifierKeys::getCurrentModifiers().isShiftDown())
+            {
+                cuePositions[i] = player->getPositionRelative();
+                cueButtons[i].setButtonText("Cue " + juce::String(i + 1) + " (ON)");
+
+                saveCues();
             }
-        });
+            else
+            {
+                player->setPositionRelative(cuePositions[i]);
+            }
+        }
     }
+
+    for (int i = 0; i < 8; ++i)
+    {
+        if (button == &cueButtons[i])
+        {
+            if (cuePositions[i] == -1.0 || juce::ModifierKeys::getCurrentModifiers().isShiftDown())
+            {
+                cuePositions[i] = player->getPositionRelative();
+                cueButtons[i].setButtonText("Cue " + juce::String(i + 1) + " (ON)");
+
+                saveCues();
+            }
+            else
+            {
+                player->setPositionRelative(cuePositions[i]);
+            }
+        }
+    }
+
+    if (button == &clearCuesButton)
+    {
+        for (int i = 0; i < 8; ++i)
+        {
+            cuePositions[i] = -1.0;
+            cueButtons[i].setButtonText("Cue " + juce::String(i + 1));
+            saveCues();
+        }
+    }
+
 }
 
 void DeckGUI::sliderValueChanged (Slider *slider)
@@ -171,6 +245,55 @@ void DeckGUI::loadFile(juce::URL audioURL)
     
     // Send the file to draw the wave chart in the screen.
     waveformDisplay.loadURL(audioURL);
+
+    loadCues(audioURL);
 }
     
 
+void DeckGUI::saveCues()
+{
+    // Se não houver música carregada, não guarda nada
+    if (currentURL.isEmpty()) return;
+
+    // Cria um ficheiro com o nome da música + ".cues" na pasta Documentos
+    juce::String fileName = currentURL.getFileName() + ".cues";
+    juce::File cueFile = juce::File::getSpecialLocation(juce::File::userDocumentsDirectory).getChildFile(fileName);
+
+    juce::FileOutputStream output(cueFile);
+    if (!output.openedOk()) return;
+    
+    output.setPosition(0);
+    output.truncate();
+
+    // Escreve os 8 tempos no ficheiro, um por linha
+    for (int i = 0; i < 8; ++i) {
+        output.writeText(juce::String(cuePositions[i]) + "\n", false, false, nullptr);
+    }
+}
+
+void DeckGUI::loadCues(juce::URL trackURL)
+{
+    currentURL = trackURL;
+
+    for (int i = 0; i < 8; ++i) {
+        cuePositions[i] = -1.0;
+        cueButtons[i].setButtonText("Cue " + juce::String(i + 1));
+    }
+
+    juce::String fileName = currentURL.getFileName() + ".cues";
+    juce::File cueFile = juce::File::getSpecialLocation(juce::File::userDocumentsDirectory).getChildFile(fileName);
+
+    if (cueFile.existsAsFile()) {
+        juce::StringArray lines;
+        cueFile.readLines(lines);
+
+        for (int i = 0; i < 8 && i < lines.size(); ++i) {
+            double pos = lines[i].getDoubleValue();
+            cuePositions[i] = pos;
+            
+            if (pos != -1.0) {
+                cueButtons[i].setButtonText("Cue " + juce::String(i + 1) + " (ON)");
+            }
+        }
+    }
+}
