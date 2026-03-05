@@ -8,7 +8,7 @@ MainComponent::MainComponent()
 
     // Colors from Decks.
     deckGUI1.setMainColour(juce::Colours::darkmagenta);
-    deckGUI2.setMainColour(juce::Colours::green);
+    deckGUI2.setMainColour(juce::Colours::cyan);
 
     // Some platforms require permissions to open input channels so request that here
     if (RuntimePermissions::isRequired (RuntimePermissions::recordAudio)
@@ -74,12 +74,12 @@ void MainComponent::paint (Graphics& g)
 void MainComponent::resized()
 {
     // Divides screen.
-    auto halfHeight = getHeight() / 2;
+    auto deckHeight = getHeight() * 0.6;
 
     // Decks upper part.
-    deckGUI1.setBounds(0, 0, getWidth()/2, halfHeight);
-    deckGUI2.setBounds(getWidth()/2, 0, getWidth()/2, halfHeight);
+    deckGUI1.setBounds(0, 0, getWidth()/2, deckHeight);
+    deckGUI2.setBounds(getWidth()/2, 0, getWidth()/2, deckHeight);
 
     // Playlist below decks.
-    playlistComponent.setBounds(0, halfHeight, getWidth(), halfHeight);
+   playlistComponent.setBounds(0, deckHeight, getWidth(), getHeight() - deckHeight);
 }

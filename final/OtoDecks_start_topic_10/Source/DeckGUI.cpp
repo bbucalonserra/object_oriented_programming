@@ -154,7 +154,8 @@ void DeckGUI::paint (Graphics& g)
 
 void DeckGUI::resized()
 {
-    double rowH = getHeight() / 14.0; 
+    // Increased divisor to 15.0 to provide more vertical granularity
+    double rowH = getHeight() / 15.0; 
     int middleX = getWidth() / 2;
     int padding = 4;
 
@@ -200,15 +201,15 @@ void DeckGUI::resized()
 
     // Equalizer Section
     int eqLabelY = sliderY + (sliderH * 3);
-    int eqLabelH = (int)(rowH * 0.5); // Small height for the title
+    int eqLabelH = (int)(rowH * 0.6); 
     
     // EQ Title
     eqLabel.setBounds(0, eqLabelY, getWidth(), eqLabelH);
 
     // EQ Knobs (The 3 sliders)
     int eqKnobsY = eqLabelY + eqLabelH;
-    // Reduzido levemente (de 1.8 para 1.6) para dar mais espaço vertical e não encavalar
-    int eqKnobsHeight = (int)(rowH * 1.6); 
+    // Maintained the increased knob size (2.2) for better visibility
+    int eqKnobsHeight = (int)(rowH * 2.2); 
     int knobWidth = getWidth() / 3;
 
     eqLowSlider.setBounds(juce::Rectangle<int>(0, eqKnobsY, knobWidth, eqKnobsHeight).reduced(padding));
@@ -216,26 +217,26 @@ void DeckGUI::resized()
     eqHighSlider.setBounds(juce::Rectangle<int>(knobWidth * 2, eqKnobsY, knobWidth, eqKnobsHeight).reduced(padding));
 
     // EQ Labels (Low, Mid, High) placed directly below the knobs
-    int eqTextY = eqKnobsY + eqKnobsHeight - 2; 
-    // AUMENTADO (de 0.4 para 0.6) para a perna do "g" não ser cortada
+    int eqTextY = eqKnobsY + eqKnobsHeight - 5; 
+    // Height maintained to ensure "g" in "High" is not cut off
     int eqTextH = (int)(rowH * 0.6); 
 
     lowLabel.setBounds(0, eqTextY, knobWidth, eqTextH);
     midLabel.setBounds(knobWidth, eqTextY, knobWidth, eqTextH);
     highLabel.setBounds(knobWidth * 2, eqTextY, knobWidth, eqTextH);
 
-    // Desenhando o botão de Reset EQ logo abaixo dos knobs e labels
-    int resetBtnY = eqTextY + eqTextH; 
-    int resetBtnHeight = (int)(rowH * 0.7);
-    resetEQButton.setBounds(juce::Rectangle<int>(getWidth() / 3, resetBtnY, getWidth() / 3, resetBtnHeight).reduced(padding));
+    // Reset EQ Button - repositioned with safety margin to avoid overlapping LOAD button
+    int resetBtnY = eqTextY + eqTextH + 5; 
+    int resetBtnHeight = (int)(rowH * 0.8);
+    resetEQButton.setBounds(juce::Rectangle<int>(getWidth() / 4, resetBtnY, getWidth() / 2, resetBtnHeight).reduced(padding));
 
-    // Load Button
-    loadButton.setBounds(juce::Rectangle<int>(0, getHeight() - (int)rowH, getWidth(), (int)rowH).reduced(padding));
+    // Load Button - Anchored to the very bottom of the component
+    int loadBtnHeight = (int)(rowH * 1.2);
+    loadButton.setBounds(juce::Rectangle<int>(0, getHeight() - loadBtnHeight, getWidth(), loadBtnHeight).reduced(padding));
 
-    // BPM.
+    // BPM visualization at the top right
     bpmLabel.setBounds(getWidth() - 100, 5, 90, 20);
 }
-
 
 void DeckGUI::buttonClicked(Button* button)
 {
