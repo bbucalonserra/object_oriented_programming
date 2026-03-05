@@ -73,7 +73,7 @@ DeckGUI::DeckGUI(DJAudioPlayer* _player,
     posSlider.addListener(this);
 
     volSlider.setRange(0.0, 1.0);
-    speedSlider.setRange(0.0, 100.0);
+    speedSlider.setRange(0.0, 2.0);
     posSlider.setRange(0.0, 1.0);
 
 
@@ -262,7 +262,19 @@ void DeckGUI::sliderValueChanged (Slider *slider)
 {
     if (slider == &volSlider)
     {
+        double val = slider->getValue();
         player->setGain(slider->getValue());
+
+    if (val > 0.8) {
+        slider->setColour(juce::Slider::thumbColourId, juce::Colours::red);
+        slider->setColour(juce::Slider::trackColourId, juce::Colours::red.withAlpha(0.5f));
+        } else if (val > 0.5) {
+            slider->setColour(juce::Slider::thumbColourId, juce::Colours::orange);
+            slider->setColour(juce::Slider::trackColourId, juce::Colours::orange.withAlpha(0.5f));
+        } else {
+            slider->setColour(juce::Slider::thumbColourId, juce::Colours::green);
+            slider->setColour(juce::Slider::trackColourId, juce::Colours::green.withAlpha(0.5f));
+        }
     }
 
     if (slider == &speedSlider)
@@ -365,7 +377,9 @@ void DeckGUI::loadCues(juce::URL trackURL)
             cuePositions[i] = pos;
             
             if (pos != -1.0) {
-                cueButtons[i].setButtonText(juce::String(i + 1) + " (ON)");
+                cueButtons[i].setButtonText(juce::String(i + 1)); // Sem o ON
+                cueButtons[i].setColour(juce::TextButton::buttonColourId, juce::Colours::grey);
+                cueButtons[i].setColour(juce::TextButton::textColourOffId, juce::Colours::black);
             }
         }
     }
