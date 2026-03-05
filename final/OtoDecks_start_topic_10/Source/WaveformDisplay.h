@@ -33,6 +33,10 @@ public:
     /** set the relative position of the playhead*/
     void setPositionRelative(double pos);
 
+    void setWaveformColour(juce::Colour newColour);
+
+    juce::Colour waveformColour = juce::Colours::orange;
+
 private:
     AudioThumbnail audioThumb;
     bool fileLoaded; 

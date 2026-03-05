@@ -37,10 +37,12 @@ void PlaylistComponent::paint(juce::Graphics& g)
 
 void PlaylistComponent::resized()
 {
-    // Button on the top and table below. 
-    importButton.setBounds(0, 0, getWidth() / 2, getHeight() / 10);
-    searchInput.setBounds(getWidth() / 2, 0, getWidth() / 2, getHeight() / 10);
-    tableComponent.setBounds(0, getHeight() / 10, getWidth(), (getHeight() / 10) * 9);
+    int toolBarHeight = 40;
+    int padding = 5;
+
+    importButton.setBounds(padding, padding, (getWidth() / 4) - (padding * 2), toolBarHeight - (padding * 2));
+    searchInput.setBounds(getWidth() / 4, padding, (getWidth() / 4 * 3) - padding, toolBarHeight - (padding * 2));
+    tableComponent.setBounds(0, toolBarHeight, getWidth(), getHeight() - toolBarHeight);
 }
 
 // Returns the size of the vector (how many rows the table should draw).

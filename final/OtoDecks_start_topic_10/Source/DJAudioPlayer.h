@@ -1,16 +1,7 @@
-/*
-  ==============================================================================
-
-    DJAudioPlayer.h
-    Created: 13 Mar 2020 4:22:22pm
-    Author:  matthew
-
-  ==============================================================================
-*/
-
 #pragma once
 
 #include "../JuceLibraryCode/JuceHeader.h"
+#include <juce_dsp/juce_dsp.h>
 
 class DJAudioPlayer : public AudioSource {
   public:
@@ -27,7 +18,9 @@ class DJAudioPlayer : public AudioSource {
     void setSpeed(double ratio);
     void setPosition(double posInSecs);
     void setPositionRelative(double pos);
-    
+    void setEqLow(float gainLinear);
+    void setEqMid(float gainLinear);
+    void setEqHigh(float gainLinear);
 
     void start();
     void stop();
@@ -40,6 +33,11 @@ private:
     std::unique_ptr<AudioFormatReaderSource> readerSource;
     AudioTransportSource transportSource; 
     ResamplingAudioSource resampleSource{&transportSource, false, 2};
+    double currentSampleRate = 44100.0;
+
+    juce::dsp::ProcessorChain<juce::dsp::IIR::Filter<float>,
+                                  juce::dsp::IIR::Filter<float>,
+                                  juce::dsp::IIR::Filter<float>> eqChain;
 
 };
 

@@ -20,16 +20,6 @@ DJAudioPlayer::~DJAudioPlayer()
 
 }
 
-void DJAudioPlayer::prepareToPlay (int samplesPerBlockExpected, double sampleRate) 
-{
-    transportSource.prepareToPlay(samplesPerBlockExpected, sampleRate);
-    resampleSource.prepareToPlay(samplesPerBlockExpected, sampleRate);
-}
-void DJAudioPlayer::getNextAudioBlock (const AudioSourceChannelInfo& bufferToFill)
-{
-    resampleSource.getNextAudioBlock(bufferToFill);
-
-}
 void DJAudioPlayer::releaseResources()
 {
     transportSource.releaseResources();
@@ -124,7 +114,6 @@ void DJAudioPlayer::setPositionRelative(double pos)
     }
 }
 
-
 void DJAudioPlayer::start()
 {
     transportSource.start();
@@ -137,4 +126,56 @@ void DJAudioPlayer::stop()
 double DJAudioPlayer::getPositionRelative()
 {
     return transportSource.getCurrentPosition() / transportSource.getLengthInSeconds();
+}
+
+void DJAudioPlayer::prepareToPlay (int samplesPerBlockExpected, double sampleRate) 
+{
+    transportSource.prepareToPlay(samplesPerBlockExpected, sampleRate);
+    resampleSource.prepareToPlay(samplesPerBlockExpected, sampleRate);
+
+    // Prepare DSP.
+    currentSampleRate = sampleRate;
+    juce::dsp::ProcessSpec spec;
+    spec.sampleRate = sampleRate;
+    spec.maximumBlockSize = samplesPerBlockExpected;
+    spec.numChannels = 2; // Estéreo
+    
+    eqChain.prepare(spec);
+
+    // Initialize filtees (1 = flat / no changes).
+    setEqLow(1.0f);
+    setEqMid(1.0f);
+    setEqHigh(1.0f);
+}
+
+void DJAudioPlayer::getNextAudioBlock (const AudioSourceChannelInfo& bufferToFill)
+{
+    resampleSource.getNextAudioBlock(bufferToFill);
+
+    juce::dsp::AudioBlock<float> block(*bufferToFill.buffer);
+
+    auto subBlock = block.getSubsetChannelBlock(bufferToFill.startSample, (size_t)bufferToFill.numSamples);
+    
+    juce::dsp::ProcessContextReplacing<float> context(subBlock);
+    
+    eqChain.process(context);
+}
+
+
+void DJAudioPlayer::setEqLow(float gainLinear)
+{
+    auto coeffs = juce::dsp::IIR::Coefficients<float>::makeLowShelf(currentSampleRate, 200.0f, 0.707f, gainLinear);
+    *eqChain.get<0>().coefficients = *coeffs;
+}
+
+void DJAudioPlayer::setEqMid(float gainLinear)
+{
+    auto coeffs = juce::dsp::IIR::Coefficients<float>::makePeakFilter(currentSampleRate, 5000.0f, 0.707f, gainLinear);
+    *eqChain.get<1>().coefficients = *coeffs;
+}
+
+void DJAudioPlayer::setEqHigh(float gainLinear)
+{
+    auto coeffs = juce::dsp::IIR::Coefficients<float>::makeHighShelf(currentSampleRate, 4000.0f, 0.707f, gainLinear);
+    *eqChain.get<2>().coefficients = *coeffs;
 }

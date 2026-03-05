@@ -29,6 +29,8 @@ public:
            AudioThumbnailCache & 	cacheToUse );
     ~DeckGUI();
 
+    void setMainColour(juce::Colour c);
+
     void paint (Graphics&) override;
     void resized() override;
 
@@ -67,7 +69,20 @@ private:
 
     WaveformDisplay waveformDisplay;
 
-    DJAudioPlayer* player; 
+    DJAudioPlayer* player;
 
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (DeckGUI)
+    juce::Slider eqLowSlider;
+    juce::Slider eqMidSlider;
+    juce::Slider eqHighSlider;
+
+    void saveEQ();
+    void loadEQ(juce::URL trackURL);
+
+    juce::Label volLabel{ "VOL", "VOL" };
+    juce::Label speedLabel{ "SPD", "SPD" };
+    juce::Label posLabel{ "POS", "POS" };
+
+    juce::Label eqLabel{ "EQUALIZER", "EQUALIZER" };
+
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (DeckGUI);
 };
