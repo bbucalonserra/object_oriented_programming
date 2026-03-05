@@ -53,6 +53,14 @@ void DJAudioPlayer::loadURL(URL audioURL)
 
     // If the variable reader points to somewhere, therefore there's a file.
     if (reader != nullptr) {       
+        
+        // Search for BPM.
+        juce::String bpmString = reader->metadataValues.getValue("bpm", "120");
+        currentBaseBpm = bpmString.getDoubleValue();
+
+        // If anything "weird", use 120.
+        if (currentBaseBpm <= 0) currentBaseBpm = 120.0;
+
         // Create a variable called newSource.
         // unique_ptr creates a smart pointer (creates the address and when it's not used anymore, deletes it). 
         // It will store a AudioFormatReaderSource.
@@ -89,9 +97,9 @@ void DJAudioPlayer::setGain(double gain)
 }
 void DJAudioPlayer::setSpeed(double ratio)
 {
-  if (ratio < 0 || ratio > 100.0)
+  if (ratio < 0 || ratio > 2.00)
     {
-        std::cout << "DJAudioPlayer::setSpeed ratio should be between 0 and 100" << std::endl;
+        std::cout << "DJAudioPlayer::setSpeed ratio should be between 0 and 2" << std::endl;
     }
     else {
         resampleSource.setResamplingRatio(ratio);
@@ -178,4 +186,9 @@ void DJAudioPlayer::setEqHigh(float gainLinear)
 {
     auto coeffs = juce::dsp::IIR::Coefficients<float>::makeHighShelf(currentSampleRate, 4000.0f, 0.707f, gainLinear);
     *eqChain.get<2>().coefficients = *coeffs;
+}
+
+double DJAudioPlayer::getBpm() 
+{ 
+    return currentBaseBpm; 
 }

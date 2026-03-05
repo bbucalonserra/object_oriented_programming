@@ -28,6 +28,8 @@ class DJAudioPlayer : public AudioSource {
     /** get the relative position of the playhead */
     double getPositionRelative();
 
+    double getBpm();
+
 private:
     AudioFormatManager& formatManager;
     std::unique_ptr<AudioFormatReaderSource> readerSource;
@@ -39,6 +41,7 @@ private:
                                   juce::dsp::IIR::Filter<float>,
                                   juce::dsp::IIR::Filter<float>> eqChain;
 
+    double currentBaseBpm = 120.0;                          
 };
 
 

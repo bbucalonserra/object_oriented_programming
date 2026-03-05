@@ -35,12 +35,12 @@ public:
 
     void setWaveformColour(juce::Colour newColour);
 
-    juce::Colour waveformColour = juce::Colours::orange;
-
 private:
     AudioThumbnail audioThumb;
     bool fileLoaded; 
     double position;
+
+    juce::Colour waveformColour = juce::Colours::orange;
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (WaveformDisplay)
 };

@@ -72,21 +72,17 @@ void WaveformDisplay::loadURL(URL audioURL)
   fileLoaded  = audioThumb.setSource(new URLInputSource(audioURL));
   if (fileLoaded)
   {
-    std::cout << "wfd: loaded! " << std::endl;
     repaint();
   }
   else {
-    std::cout << "wfd: not loaded! " << std::endl;
+    std::cout << "Not loaded." << std::endl;
   }
 
 }
 
 void WaveformDisplay::changeListenerCallback (ChangeBroadcaster *source)
 {
-    std::cout << "wfd: change received! " << std::endl;
-
     repaint();
-
 }
 
 void WaveformDisplay::setPositionRelative(double pos)

@@ -1,21 +1,12 @@
-/*
-  ==============================================================================
-
-    This file was auto-generated!
-
-  ==============================================================================
-*/
-
 #include "MainComponent.h"
 
-//==============================================================================
 MainComponent::MainComponent()
 {
     // Make sure you set the size of the component after
     // you add any child components.
     setSize (1400, 900);
 
-    //
+    // Colors from Decks.
     deckGUI1.setMainColour(juce::Colours::darkmagenta);
     deckGUI2.setMainColour(juce::Colours::green);
 
@@ -76,19 +67,19 @@ void MainComponent::releaseResources()
 //==============================================================================
 void MainComponent::paint (Graphics& g)
 {
-    // (Our component is opaque, so we must completely fill the background with a solid colour)
+    // Component is opaque, so we must completely fill the background with a solid colour.
     g.fillAll (getLookAndFeel().findColour (ResizableWindow::backgroundColourId));
 }
 
 void MainComponent::resized()
 {
-    // Divide a tela na metade
+    // Divides screen.
     auto halfHeight = getHeight() / 2;
 
-    // Decks ficam na metade de cima
+    // Decks upper part.
     deckGUI1.setBounds(0, 0, getWidth()/2, halfHeight);
     deckGUI2.setBounds(getWidth()/2, 0, getWidth()/2, halfHeight);
 
-    // Playlist fica na metade de baixo, ocupando a largura toda
+    // Playlist below decks.
     playlistComponent.setBounds(0, halfHeight, getWidth(), halfHeight);
 }

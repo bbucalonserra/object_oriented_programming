@@ -1,22 +1,9 @@
-/*
-  ==============================================================================
-
-    DeckGUI.h
-    Created: 13 Mar 2020 6:44:48pm
-    Author:  matthew
-
-  ==============================================================================
-*/
-
 #pragma once
 
 #include "../JuceLibraryCode/JuceHeader.h"
 #include "DJAudioPlayer.h"
 #include "WaveformDisplay.h"
 
-//==============================================================================
-/*
-*/
 class DeckGUI    : public Component,
                    public Button::Listener, 
                    public Slider::Listener, 
@@ -25,30 +12,45 @@ class DeckGUI    : public Component,
 {
 public:
     DeckGUI(DJAudioPlayer* player, 
-           AudioFormatManager & 	formatManagerToUse,
-           AudioThumbnailCache & 	cacheToUse );
+           AudioFormatManager &    formatManagerToUse,
+           AudioThumbnailCache &   cacheToUse );
     ~DeckGUI();
-
-    void setMainColour(juce::Colour c);
 
     void paint (Graphics&) override;
     void resized() override;
 
-     /** implement Button::Listener. */
+    /** Loads audio file directly from deck or playlist. */
+    void loadFile(juce::URL audioURL);
+
+    /** Sets the main theme colour for the deck's waveform. */
+    void setMainColour(juce::Colour c);
+
+private:
+    /** implement Button::Listener. */
     void buttonClicked (Button *) override;
 
     /** implement Slider::Listener. */
     void sliderValueChanged (Slider *slider) override;
 
+    /** Detects if a file is being dragged over the deck. */
     bool isInterestedInFileDrag (const StringArray &files) override;
+
+    /** Handles the file dropped onto the deck. */
     void filesDropped (const StringArray &files, int x, int y) override; 
 
+    /** Updates the waveform position based on the audio playhead. */
     void timerCallback() override; 
 
-    /** Loads audio file directly from deck from external URL. */
-    void loadFile(juce::URL audioURL);
+    // Internal persistence methods
+    void saveCues();
+    void loadCues(juce::URL trackURL);
+    void saveEQ();
+    
+    juce::TextButton resetEQButton{"RESET EQ"};
 
-private:
+    void loadEQ(juce::URL trackURL);
+
+    // UI Components
     juce::FileChooser fChooser{"Select a file..."};
 
     TextButton playButton{"PLAY"};
@@ -60,8 +62,6 @@ private:
     double cuePositions[8];
 
     juce::URL currentURL;
-    void saveCues();
-    void loadCues(juce::URL trackURL);
   
     Slider volSlider; 
     Slider speedSlider;
@@ -75,14 +75,12 @@ private:
     juce::Slider eqMidSlider;
     juce::Slider eqHighSlider;
 
-    void saveEQ();
-    void loadEQ(juce::URL trackURL);
-
     juce::Label volLabel{ "VOL", "VOL" };
     juce::Label speedLabel{ "SPD", "SPD" };
     juce::Label posLabel{ "POS", "POS" };
-
     juce::Label eqLabel{ "EQUALIZER", "EQUALIZER" };
+    juce::Label lowLabel{ "LOW", "Low" }, midLabel{ "MID", "Mid" }, highLabel{ "HIGH", "High" };
+    juce::Label bpmLabel;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (DeckGUI);
 };

@@ -47,11 +47,24 @@ DeckGUI::DeckGUI(DJAudioPlayer* _player,
     // Text from equalizer.
     addAndMakeVisible(eqLabel);
     eqLabel.setJustificationType(juce::Justification::centred);
-    eqLabel.setFont(juce::Font(12.0f, juce::Font::bold));
+    eqLabel.setFont(juce::Font(juce::FontOptions(12.0f).withStyle("Bold")));
+
+    // Configurando o botão de Reset EQ
+    addAndMakeVisible(resetEQButton);
+    resetEQButton.addListener(this);
 
     // Clear Button.
     addAndMakeVisible(clearCuesButton);
     clearCuesButton.addListener(this);
+
+    // EQ.
+    addAndMakeVisible(lowLabel);
+    addAndMakeVisible(midLabel);
+    addAndMakeVisible(highLabel);
+
+    lowLabel.setJustificationType(juce::Justification::centred);
+    midLabel.setJustificationType(juce::Justification::centred);
+    highLabel.setJustificationType(juce::Justification::centred);
 
     // Prepare 8 buttons Hot Cue
     for (int i = 0; i < 8; ++i) {
@@ -86,7 +99,7 @@ DeckGUI::DeckGUI(DJAudioPlayer* _player,
     speedSlider.setValue(1.0);
     posSlider.setValue(0.0);
 
-    startTimer(500);
+    startTimer(50);
 
     // Configurating sliders from EQ.
     eqLowSlider.setSliderStyle(juce::Slider::Rotary);
@@ -109,6 +122,16 @@ DeckGUI::DeckGUI(DJAudioPlayer* _player,
     eqHighSlider.setTextBoxStyle(juce::Slider::NoTextBox, false, 0, 0);
     addAndMakeVisible(eqHighSlider);
     eqHighSlider.addListener(this);
+
+    // Label BPM
+    addAndMakeVisible(bpmLabel);
+    bpmLabel.setText("BPM: --", juce::dontSendNotification);
+    bpmLabel.setJustificationType(juce::Justification::centredLeft);
+    bpmLabel.setColour(juce::Label::textColourId, juce::Colours::orange);
+
+    // Adjust speedSlider.
+    speedSlider.setRange(0.0, 2.0); 
+    speedSlider.setValue(1.0);
 
 
 }
@@ -184,27 +207,44 @@ void DeckGUI::resized()
 
     // EQ Knobs (The 3 sliders)
     int eqKnobsY = eqLabelY + eqLabelH;
-    int eqKnobsHeight = (int)(rowH * 2.5); // Adjusted to fit the title above
+    // Reduzido levemente (de 1.8 para 1.6) para dar mais espaço vertical e não encavalar
+    int eqKnobsHeight = (int)(rowH * 1.6); 
     int knobWidth = getWidth() / 3;
 
     eqLowSlider.setBounds(juce::Rectangle<int>(0, eqKnobsY, knobWidth, eqKnobsHeight).reduced(padding));
     eqMidSlider.setBounds(juce::Rectangle<int>(knobWidth, eqKnobsY, knobWidth, eqKnobsHeight).reduced(padding));
     eqHighSlider.setBounds(juce::Rectangle<int>(knobWidth * 2, eqKnobsY, knobWidth, eqKnobsHeight).reduced(padding));
 
+    // EQ Labels (Low, Mid, High) placed directly below the knobs
+    int eqTextY = eqKnobsY + eqKnobsHeight - 2; 
+    // AUMENTADO (de 0.4 para 0.6) para a perna do "g" não ser cortada
+    int eqTextH = (int)(rowH * 0.6); 
+
+    lowLabel.setBounds(0, eqTextY, knobWidth, eqTextH);
+    midLabel.setBounds(knobWidth, eqTextY, knobWidth, eqTextH);
+    highLabel.setBounds(knobWidth * 2, eqTextY, knobWidth, eqTextH);
+
+    // Desenhando o botão de Reset EQ logo abaixo dos knobs e labels
+    int resetBtnY = eqTextY + eqTextH; 
+    int resetBtnHeight = (int)(rowH * 0.7);
+    resetEQButton.setBounds(juce::Rectangle<int>(getWidth() / 3, resetBtnY, getWidth() / 3, resetBtnHeight).reduced(padding));
+
     // Load Button
     loadButton.setBounds(juce::Rectangle<int>(0, getHeight() - (int)rowH, getWidth(), (int)rowH).reduced(padding));
+
+    // BPM.
+    bpmLabel.setBounds(getWidth() - 100, 5, 90, 20);
 }
+
 
 void DeckGUI::buttonClicked(Button* button)
 {
     if (button == &playButton)
     {
-        std::cout << "Play button was clicked " << std::endl;
         player->start();
     }
     if (button == &stopButton)
     {
-        std::cout << "Stop button was clicked " << std::endl;
         player->stop();
     }
     if (button == &loadButton)
@@ -219,6 +259,14 @@ void DeckGUI::buttonClicked(Button* button)
             }
         });
     }
+
+    if (button == &resetEQButton)
+        {
+            // Volta os três sliders para 1.0 (flat) e notifica o listener
+            eqLowSlider.setValue(1.0, juce::sendNotification);
+            eqMidSlider.setValue(1.0, juce::sendNotification);
+            eqHighSlider.setValue(1.0, juce::sendNotification);
+        }
 
     for (int i = 0; i < 8; ++i)
     {
@@ -252,9 +300,9 @@ void DeckGUI::buttonClicked(Button* button)
             // Reset to default look
             cueButtons[i].removeColour(juce::TextButton::buttonColourId);
             cueButtons[i].removeColour(juce::TextButton::textColourOffId);
-            
-            saveCues();
         }
+        // Save Cues.
+        saveCues();
     }
 }
 
@@ -262,12 +310,12 @@ void DeckGUI::sliderValueChanged (Slider *slider)
 {
     if (slider == &volSlider)
     {
-        double val = slider->getValue();
-        player->setGain(slider->getValue());
+       double val = slider->getValue();
+        player->setGain(val);
 
-    if (val > 0.8) {
-        slider->setColour(juce::Slider::thumbColourId, juce::Colours::red);
-        slider->setColour(juce::Slider::trackColourId, juce::Colours::red.withAlpha(0.5f));
+        if (val > 0.8) {
+            slider->setColour(juce::Slider::thumbColourId, juce::Colours::red);
+            slider->setColour(juce::Slider::trackColourId, juce::Colours::red.withAlpha(0.5f));
         } else if (val > 0.5) {
             slider->setColour(juce::Slider::thumbColourId, juce::Colours::orange);
             slider->setColour(juce::Slider::trackColourId, juce::Colours::orange.withAlpha(0.5f));
@@ -279,7 +327,19 @@ void DeckGUI::sliderValueChanged (Slider *slider)
 
     if (slider == &speedSlider)
     {
-        player->setSpeed(slider->getValue());
+        double speedVal = slider->getValue();
+        player->setSpeed(speedVal);
+
+        // Colours
+        if (speedVal > 1.0) slider->setColour(juce::Slider::thumbColourId, juce::Colours::red);
+        else if (speedVal < 1.0) slider->setColour(juce::Slider::thumbColourId, juce::Colours::orange);
+        else slider->setColour(juce::Slider::thumbColourId, juce::Colours::green);
+
+        // R5: Cálculo do BPM "Live"
+        double baseBpm = player->getBpm();
+        double liveBpm = baseBpm * speedVal; 
+        
+        bpmLabel.setText("BPM: " + juce::String(liveBpm, 1), juce::dontSendNotification);
     }
     
     if (slider == &posSlider)
@@ -302,15 +362,13 @@ void DeckGUI::sliderValueChanged (Slider *slider)
     
 }
 
-bool DeckGUI::isInterestedInFileDrag (const StringArray &files)
+bool DeckGUI::isInterestedInFileDrag (const StringArray& /*files*/)
 {
-  std::cout << "DeckGUI::isInterestedInFileDrag" << std::endl;
   return true; 
 }
 
 void DeckGUI::filesDropped (const StringArray& files, int /*x*/, int /*y*/)
 {
-  std::cout << "DeckGUI::filesDropped" << std::endl;
   if (files.size() == 1)
   {
     player->loadURL(URL{File{files[0]}});
@@ -319,7 +377,6 @@ void DeckGUI::filesDropped (const StringArray& files, int /*x*/, int /*y*/)
 
 void DeckGUI::timerCallback()
 {
-    //std::cout << "DeckGUI::timerCallback" << std::endl;
     waveformDisplay.setPositionRelative(
             player->getPositionRelative());
 }
@@ -430,6 +487,5 @@ void DeckGUI::loadEQ(juce::URL trackURL)
 
 void DeckGUI::setMainColour(juce::Colour c) 
 { 
-    waveformDisplay.waveformColour = c; 
-    waveformDisplay.repaint();
+  waveformDisplay.setWaveformColour(c); 
 }
