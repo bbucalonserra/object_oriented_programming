@@ -1,28 +1,19 @@
-/*
-  ==============================================================================
-
-    DeckGUI.cpp
-    Created: 13 Mar 2020 6:44:48pm
-    Author:  matthew
-
-  ==============================================================================
-*/
-
 #include "../JuceLibraryCode/JuceHeader.h"
 #include "DeckGUI.h"
 
-//==============================================================================
+// Constructor: sets up all the buttons, sliders, and labels, and starts the UI timer
 DeckGUI::DeckGUI(DJAudioPlayer* _player, 
-                AudioFormatManager & 	formatManagerToUse,
-                AudioThumbnailCache & 	cacheToUse
+                AudioFormatManager &    formatManagerToUse,
+                AudioThumbnailCache &    cacheToUse
            ) : player(_player), 
-               waveformDisplay(formatManagerToUse, cacheToUse)
+                waveformDisplay(formatManagerToUse, cacheToUse)
 {
-
+    // Adding the main playback and file buttons
     addAndMakeVisible(playButton);
     addAndMakeVisible(stopButton);
     addAndMakeVisible(loadButton);
        
+    // Making the main deck sliders visible
     addAndMakeVisible(volSlider);
     addAndMakeVisible(speedSlider);
     addAndMakeVisible(posSlider);
@@ -49,7 +40,7 @@ DeckGUI::DeckGUI(DJAudioPlayer* _player,
     eqLabel.setJustificationType(juce::Justification::centred);
     eqLabel.setFont(juce::Font(juce::FontOptions(12.0f).withStyle("Bold")));
 
-    // Configurando o botão de Reset EQ
+    // Configuring the Reset EQ button
     addAndMakeVisible(resetEQButton);
     resetEQButton.addListener(this);
 
@@ -76,7 +67,7 @@ DeckGUI::DeckGUI(DJAudioPlayer* _player,
         cuePositions[i] = -1.0; 
     }
 
-
+    // Setting up the listeners for all our buttons and sliders
     playButton.addListener(this);
     stopButton.addListener(this);
     loadButton.addListener(this);
@@ -99,6 +90,7 @@ DeckGUI::DeckGUI(DJAudioPlayer* _player,
     speedSlider.setValue(1.0);
     posSlider.setValue(0.0);
 
+    // Starting the timer so the UI keeps updating regularly
     startTimer(50);
 
     // Configurating sliders from EQ.
@@ -136,22 +128,25 @@ DeckGUI::DeckGUI(DJAudioPlayer* _player,
 
 }
 
+// The destructor: stops the timer and tidies up when the deck is closed
 DeckGUI::~DeckGUI()
 {
     stopTimer();
 }
 
+// Paints the background and standard visuals of the component
 void DeckGUI::paint (Graphics& g)
 {
    g.fillAll (getLookAndFeel().findColour (ResizableWindow::backgroundColourId));
 
     g.setColour (Colours::grey);
-    g.drawRect (getLocalBounds(), 1);   // draw an outline around the component
+    g.drawRect (getLocalBounds(), 1);
 
     g.setColour (Colours::white);
     g.setFont (14.0f);
 }
 
+// Handles the responsive layout and positioning of all UI elements
 void DeckGUI::resized()
 {
     // Increased divisor to 15.0 to provide more vertical granularity
@@ -238,8 +233,10 @@ void DeckGUI::resized()
     bpmLabel.setBounds(getWidth() - 100, 5, 90, 20);
 }
 
+// Logic for when any button is clicked, like playing music or managing cues
 void DeckGUI::buttonClicked(Button* button)
 {
+    // Detecting which button was clicked and starting the action
     if (button == &playButton)
     {
         player->start();
@@ -263,7 +260,7 @@ void DeckGUI::buttonClicked(Button* button)
 
     if (button == &resetEQButton)
         {
-            // Volta os três sliders para 1.0 (flat) e notifica o listener
+            // Reset the three sliders back to 1.0 (flat) and notify the listener
             eqLowSlider.setValue(1.0, juce::sendNotification);
             eqMidSlider.setValue(1.0, juce::sendNotification);
             eqHighSlider.setValue(1.0, juce::sendNotification);
@@ -294,6 +291,7 @@ void DeckGUI::buttonClicked(Button* button)
 
     if (button == &clearCuesButton)
     {
+        // Cleaning all the hot cues we've set
         for (int i = 0; i < 8; ++i)
         {
             cuePositions[i] = -1.0;
@@ -307,6 +305,7 @@ void DeckGUI::buttonClicked(Button* button)
     }
 }
 
+// Updates the audio player and UI colours when sliders are moved
 void DeckGUI::sliderValueChanged (Slider *slider)
 {
     if (slider == &volSlider)
@@ -314,6 +313,7 @@ void DeckGUI::sliderValueChanged (Slider *slider)
        double val = slider->getValue();
         player->setGain(val);
 
+        // Changing the slider colour based on the volume level
         if (val > 0.8) {
             slider->setColour(juce::Slider::thumbColourId, juce::Colours::red);
             slider->setColour(juce::Slider::trackColourId, juce::Colours::red.withAlpha(0.5f));
@@ -336,7 +336,7 @@ void DeckGUI::sliderValueChanged (Slider *slider)
         else if (speedVal < 1.0) slider->setColour(juce::Slider::thumbColourId, juce::Colours::orange);
         else slider->setColour(juce::Slider::thumbColourId, juce::Colours::green);
 
-        // R5: Cálculo do BPM "Live"
+        // R5: Live BPM calculation
         double baseBpm = player->getBpm();
         double liveBpm = baseBpm * speedVal; 
         
@@ -345,6 +345,7 @@ void DeckGUI::sliderValueChanged (Slider *slider)
     
     if (slider == &posSlider)
     {
+        // Jumping to the specific track position
         player->setPositionRelative(slider->getValue());
     }
 
@@ -363,25 +364,32 @@ void DeckGUI::sliderValueChanged (Slider *slider)
     
 }
 
+// Tells the system we are ready to receive files dragged onto the deck
 bool DeckGUI::isInterestedInFileDrag (const StringArray& /*files*/)
 {
+  // We're always interested in new tracks!
   return true; 
 }
 
+// Logic for loading a file when it's dropped onto the component
 void DeckGUI::filesDropped (const StringArray& files, int /*x*/, int /*y*/)
 {
+  // If a single file is dropped, load it into the player
   if (files.size() == 1)
   {
     player->loadURL(URL{File{files[0]}});
   }
 }
 
+// Regular callback to update the waveform playhead position
 void DeckGUI::timerCallback()
 {
+    // Moving the waveform playhead based on the audio position
     waveformDisplay.setPositionRelative(
             player->getPositionRelative());
 }
 
+// Coordinates loading a file into the player, waveform, cues, and EQ
 void DeckGUI::loadFile(juce::URL audioURL)
 {
     // Sends the file to the audio engine.
@@ -395,11 +403,12 @@ void DeckGUI::loadFile(juce::URL audioURL)
     loadEQ(audioURL);
 }
     
-
+// Saves current hot cue positions to a local file
 void DeckGUI::saveCues()
 {
     if (currentURL.isEmpty()) return;
 
+    // Writing the cue points to a local file for the next time we load the track
     juce::String fileName = currentURL.getFileName() + ".cues";
     juce::File cueFile = juce::File::getSpecialLocation(juce::File::userDocumentsDirectory).getChildFile(fileName);
 
@@ -414,10 +423,12 @@ void DeckGUI::saveCues()
     }
 }
 
+// Loads saved hot cue positions for a specific track
 void DeckGUI::loadCues(juce::URL trackURL)
 {
     currentURL = trackURL;
 
+    // Resetting the UI for a fresh start with this track
     for (int i = 0; i < 8; ++i) {
         cuePositions[i] = -1.0;
         cueButtons[i].setButtonText(juce::String(i + 1));
@@ -435,7 +446,7 @@ void DeckGUI::loadCues(juce::URL trackURL)
             cuePositions[i] = pos;
             
             if (pos != -1.0) {
-                cueButtons[i].setButtonText(juce::String(i + 1)); // Sem o ON
+                cueButtons[i].setButtonText(juce::String(i + 1)); // Without the "ON"
                 cueButtons[i].setColour(juce::TextButton::buttonColourId, juce::Colours::grey);
                 cueButtons[i].setColour(juce::TextButton::textColourOffId, juce::Colours::black);
             }
@@ -443,10 +454,12 @@ void DeckGUI::loadCues(juce::URL trackURL)
     }
 }
 
+// Saves current EQ settings to a local file
 void DeckGUI::saveEQ()
 {
     if (currentURL.isEmpty()) return;
 
+    // Saving the EQ settings so the track sounds the same next time
     juce::String fileName = currentURL.getFileName() + ".eq";
     juce::File eqFile = juce::File::getSpecialLocation(juce::File::userDocumentsDirectory).getChildFile(fileName);
 
@@ -456,16 +469,18 @@ void DeckGUI::saveEQ()
     output.setPosition(0);
     output.truncate();
 
-    // Sava Low, Mid, High
+    // Save Low, Mid, High
     output.writeText(juce::String(eqLowSlider.getValue()) + "\n", false, false, nullptr);
     output.writeText(juce::String(eqMidSlider.getValue()) + "\n", false, false, nullptr);
     output.writeText(juce::String(eqHighSlider.getValue()) + "\n", false, false, nullptr);
 }
 
+// Loads saved EQ settings for a specific track
 void DeckGUI::loadEQ(juce::URL trackURL)
 {
     currentURL = trackURL;
 
+    // Searching for saved EQ settings in the user's documents
     juce::String fileName = currentURL.getFileName() + ".eq";
     juce::File eqFile = juce::File::getSpecialLocation(juce::File::userDocumentsDirectory).getChildFile(fileName);
 
@@ -481,11 +496,13 @@ void DeckGUI::loadEQ(juce::URL trackURL)
         }
     }
     
+    // Setting defaults if no settings are found
     eqLowSlider.setValue(1.0, juce::sendNotification);
     eqMidSlider.setValue(1.0, juce::sendNotification);
     eqHighSlider.setValue(1.0, juce::sendNotification);
 }
 
+// Customises the waveform colour for this deck
 void DeckGUI::setMainColour(juce::Colour c) 
 { 
   waveformDisplay.setWaveformColour(c); 

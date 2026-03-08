@@ -23,10 +23,12 @@ MainComponent::MainComponent()
         setAudioChannels (0, 2);
     }  
 
+    // Making our GUI components visible on the screen
     addAndMakeVisible(deckGUI1); 
     addAndMakeVisible(deckGUI2);
     addAndMakeVisible(playlistComponent);
 
+    // Getting the format manager ready to handle common audio files
     formatManager.registerBasicFormats();
 }
 
@@ -36,12 +38,13 @@ MainComponent::~MainComponent()
     shutdownAudio();
 }
 
-//==============================================================================
 void MainComponent::prepareToPlay (int samplesPerBlockExpected, double sampleRate)
 {
+    // Getting both players ready for the audio stream
     player1.prepareToPlay(samplesPerBlockExpected, sampleRate);
     player2.prepareToPlay(samplesPerBlockExpected, sampleRate);
     
+    // Setting up the mixer and adding our decks as inputs
     mixerSource.prepareToPlay(samplesPerBlockExpected, sampleRate);
 
     mixerSource.addInputSource(&player1, false);
@@ -50,6 +53,7 @@ void MainComponent::prepareToPlay (int samplesPerBlockExpected, double sampleRat
  }
 void MainComponent::getNextAudioBlock (const AudioSourceChannelInfo& bufferToFill)
 {
+    // Fetching the combined audio from the mixer to play it out
     mixerSource.getNextAudioBlock(bufferToFill);
 }
 

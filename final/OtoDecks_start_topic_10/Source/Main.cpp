@@ -13,13 +13,15 @@ public:
 
     void initialise (const String& /*commandLine*/) override
     {
-        // This method is where you should put your application's initialisation code..
+        // This method is where you should put your application's initialisation code.
+        // Creating the main window and setting the app name
         mainWindow.reset (new MainWindow (getApplicationName()));
     }
 
     void shutdown() override
     {
-        // Add your application's shutdown code here..
+    
+        // Cleaning up the main window to close the app properly
         mainWindow = nullptr; // (deletes our window)
     }
 
@@ -52,15 +54,19 @@ public:
                                                     DocumentWindow::allButtons)
         {
             setUsingNativeTitleBar (true);
+            
+            // Adding our MainComponent to the window
             setContentOwned (new MainComponent(), true);
 
            #if JUCE_IOS || JUCE_ANDROID
             setFullScreen (true);
            #else
+            // Setting the window to be resizable and centring it on the screen
             setResizable (true, true);
             centreWithSize (getWidth(), getHeight());
            #endif
 
+            // Making the window visible to the user
             setVisible (true);
         }
 
@@ -72,21 +78,15 @@ public:
             JUCEApplication::getInstance()->systemRequestedQuit();
         }
 
-        /* Note: Be careful if you override any DocumentWindow methods - the base
-           class uses a lot of them, so by overriding you might break its functionality.
-           It's best to do all your work in your content component instead, but if
-           you really have to override any DocumentWindow methods, make sure your
-           subclass also calls the superclass's method.
-        */
 
     private:
         JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MainWindow)
     };
 
 private:
+    // Smart pointer to manage the main window's lifetime
     std::unique_ptr<MainWindow> mainWindow;
 };
 
-//==============================================================================
 // This macro generates the main() routine that launches the app.
 START_JUCE_APPLICATION (OtoDecksApplication)

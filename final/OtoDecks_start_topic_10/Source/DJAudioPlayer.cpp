@@ -1,25 +1,19 @@
-/*
-==============================================================================
-
-DJAudioPlayer.cpp
-Created: 13 Mar 2020 4:22:22pm
-Author:  matthew
-
-==============================================================================
-*/
-
 #include "DJAudioPlayer.h"
 
+// The constructor: links the format manager to our player
 DJAudioPlayer::DJAudioPlayer(AudioFormatManager& _formatManager) 
 : formatManager(_formatManager)
 {
 
 }
+
+// The destructor: cleans up when the player is destroyed
 DJAudioPlayer::~DJAudioPlayer()
 {
 
 }
 
+// Cleanly release resources when they are no longer needed
 void DJAudioPlayer::releaseResources()
 {
     transportSource.releaseResources();
@@ -27,13 +21,13 @@ void DJAudioPlayer::releaseResources()
 }
 
 /*
-@brief Load an audio resource from a URL (e.g. file:///C:/Musics/track01.mp3) and starts reproducing.
+Load an audio resource from a URL (e.g. file:///C:/Musics/track01.mp3) and starts reproducing.
 
 * This method is responsible for creating an audio format reader for the provided resource,
 * that manages a dynamic memory allocation via pointers (std::unique_ptr),
 * and performing a transition of the audio stream to the transport source.
 
-@param audioURL The URL object pointing to the local or remote audio file.
+* audioURL The URL object pointing to the local or remote audio file.
 
 * @note If the file format is unsupported or the resource is inaccessible,
 * the function fails silently through a null pointer check, 
@@ -75,6 +69,7 @@ void DJAudioPlayer::loadURL(URL audioURL)
         // Reset.
         readerSource.reset (newSource.release());          
     } else {
+        // Show an error if the file format is not recognised
         juce::AlertWindow::showMessageBoxAsync (
             juce::AlertWindow::WarningIcon,
             "Format Error",
@@ -84,6 +79,7 @@ void DJAudioPlayer::loadURL(URL audioURL)
     }
 }
 
+// Adjust the volume, making sure it stays within a safe range
 void DJAudioPlayer::setGain(double gain)
 {
     if (gain < 0 || gain > 1.0)
@@ -95,6 +91,8 @@ void DJAudioPlayer::setGain(double gain)
     }
    
 }
+
+// Adjust the playback speed (resampling ratio)
 void DJAudioPlayer::setSpeed(double ratio)
 {
   if (ratio < 0 || ratio > 2.00)
@@ -105,11 +103,14 @@ void DJAudioPlayer::setSpeed(double ratio)
         resampleSource.setResamplingRatio(ratio);
     }
 }
+
+// Jump to a specific point in the song using seconds
 void DJAudioPlayer::setPosition(double posInSecs)
 {
     transportSource.setPosition(posInSecs);
 }
 
+// Jump to a specific point using a percentage (0.0 to 1.0)
 void DJAudioPlayer::setPositionRelative(double pos)
 {
      if (pos < 0 || pos > 1.0)
@@ -122,20 +123,25 @@ void DJAudioPlayer::setPositionRelative(double pos)
     }
 }
 
+// Start playing the music
 void DJAudioPlayer::start()
 {
     transportSource.start();
 }
+
+// Stop the music
 void DJAudioPlayer::stop()
 {
   transportSource.stop();
 }
 
+// Find out where we are in the song as a percentage
 double DJAudioPlayer::getPositionRelative()
 {
     return transportSource.getCurrentPosition() / transportSource.getLengthInSeconds();
 }
 
+// Get the audio engine ready to play with the correct sample rate
 void DJAudioPlayer::prepareToPlay (int samplesPerBlockExpected, double sampleRate) 
 {
     transportSource.prepareToPlay(samplesPerBlockExpected, sampleRate);
@@ -146,16 +152,17 @@ void DJAudioPlayer::prepareToPlay (int samplesPerBlockExpected, double sampleRat
     juce::dsp::ProcessSpec spec;
     spec.sampleRate = sampleRate;
     spec.maximumBlockSize = samplesPerBlockExpected;
-    spec.numChannels = 2; // Estéreo
+    spec.numChannels = 2; // Stereo
     
     eqChain.prepare(spec);
 
-    // Initialize filtees (1 = flat / no changes).
+    // Initialize filters (1 = flat / no changes).
     setEqLow(1.0f);
     setEqMid(1.0f);
     setEqHigh(1.0f);
 }
 
+// Process the audio through our resampling and EQ chain
 void DJAudioPlayer::getNextAudioBlock (const AudioSourceChannelInfo& bufferToFill)
 {
     resampleSource.getNextAudioBlock(bufferToFill);
@@ -169,25 +176,28 @@ void DJAudioPlayer::getNextAudioBlock (const AudioSourceChannelInfo& bufferToFil
     eqChain.process(context);
 }
 
-
+// Update the Low frequency shelf filter
 void DJAudioPlayer::setEqLow(float gainLinear)
 {
     auto coeffs = juce::dsp::IIR::Coefficients<float>::makeLowShelf(currentSampleRate, 200.0f, 0.707f, gainLinear);
     *eqChain.get<0>().coefficients = *coeffs;
 }
 
+// Update the Mid frequency peak filter
 void DJAudioPlayer::setEqMid(float gainLinear)
 {
     auto coeffs = juce::dsp::IIR::Coefficients<float>::makePeakFilter(currentSampleRate, 5000.0f, 0.707f, gainLinear);
     *eqChain.get<1>().coefficients = *coeffs;
 }
 
+// Update the High frequency shelf filter
 void DJAudioPlayer::setEqHigh(float gainLinear)
 {
     auto coeffs = juce::dsp::IIR::Coefficients<float>::makeHighShelf(currentSampleRate, 4000.0f, 0.707f, gainLinear);
     *eqChain.get<2>().coefficients = *coeffs;
 }
 
+// Return the base BPM found in the track metadata
 double DJAudioPlayer::getBpm() 
 { 
     return currentBaseBpm; 

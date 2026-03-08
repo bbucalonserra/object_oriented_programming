@@ -13,18 +13,19 @@ PlaylistComponent::PlaylistComponent(DeckGUI* _deck1, DeckGUI* _deck2): deck1(_d
 
     tableComponent.setModel(this);
 
+    // Making the table and import button visible to the user
     addAndMakeVisible(tableComponent);
     addAndMakeVisible(importButton);
 
-    //
+    // Setting up the listener for our import button
     importButton.addListener(this);
 
-    //
+    // Adding the search bar and setting its placeholder text
     addAndMakeVisible(searchInput);
     searchInput.addListener(this);
     searchInput.setTextToShowWhenEmpty("Search tracks...", juce::Colours::lightgrey);
 
-    // Read saves file when opening the app.
+    // Read saved file when opening the app.
     loadLibrary();
 }
 
@@ -32,6 +33,7 @@ PlaylistComponent::~PlaylistComponent() {}
 
 void PlaylistComponent::paint(juce::Graphics& g)
 {
+    // Filling the background with the default window colour
     g.fillAll(getLookAndFeel().findColour(juce::ResizableWindow::backgroundColourId));
 }
 
@@ -40,8 +42,11 @@ void PlaylistComponent::resized()
     int toolBarHeight = 40;
     int padding = 5;
 
+    // Positioning the top buttons and search input
     importButton.setBounds(padding, padding, (getWidth() / 4) - (padding * 2), toolBarHeight - (padding * 2));
     searchInput.setBounds(getWidth() / 4, padding, (getWidth() / 4 * 3) - padding, toolBarHeight - (padding * 2));
+    
+    // The table takes up the rest of the window space below the toolbar
     tableComponent.setBounds(0, toolBarHeight, getWidth(), getHeight() - toolBarHeight);
 }
 
@@ -51,7 +56,7 @@ int PlaylistComponent::getNumRows()
     return static_cast<int>(tracks.size());
 }
 
-// Draw the background of the lines (azul if selected, gray if not).
+// Draw the background of the lines (blue if selected, grey if not).
 void PlaylistComponent::paintRowBackground(juce::Graphics& g, int rowNumber, int width, int height, bool rowIsSelected)
 {
     if (rowIsSelected) g.fillAll(juce::Colours::lightblue);
@@ -89,10 +94,10 @@ void PlaylistComponent::buttonClicked(juce::Button* button)
                                                        juce::File{},
                                                        "*.mp3;*.wav;*.aif");
 
-        // Assync form (modern JUCE).                                                       
+        // Assync form (modern JUCE).                                                                     
         fChooser->launchAsync(fileChooserFlags, [this](const juce::FileChooser& chooser)
         {
-            auto results = chooser.getResults(); // Pega a lista de arquivos selecionados
+            auto results = chooser.getResults(); // Gets the list of selected files
 
             for (const auto& file : results)
             {
@@ -120,6 +125,7 @@ void PlaylistComponent::buttonClicked(juce::Button* button)
             // Tells table to update the list in the screen.
             tableComponent.updateContent();
 
+            // Persisting the updated track list to a file
             saveLibrary();
         });
     }
@@ -134,12 +140,12 @@ juce::Component* PlaylistComponent::refreshComponentForCell(int rowNumber, int c
 
         if (btn == nullptr)
         {
-            // Defines the name for the button (columns 6).
+            // Defines the name for the button (columns 4, 5 and 6).
             juce::String btnName = (columnId == 4) ? "Deck 1" : (columnId == 5 ? "Deck 2" : "Remove");
             btn = new juce::TextButton(btnName);
         }
 
-        // Stores the actual line in the ID of the button.
+        // Stores the actual row in the ID of the button for later reference.
         btn->setComponentID(juce::String(rowNumber));
 
         // Defines the action of the click in memory.
@@ -156,6 +162,7 @@ juce::Component* PlaylistComponent::refreshComponentForCell(int rowNumber, int c
 
                     } else if (columnId == 6) {
                         
+                        // Using async call to safely remove tracks without crashing the UI
                         juce::MessageManager::callAsync([this, row]() {
                             if (row < tracks.size()) {
 
@@ -181,7 +188,7 @@ juce::Component* PlaylistComponent::refreshComponentForCell(int rowNumber, int c
 
 void PlaylistComponent::saveLibrary()
 {
-    // Creates (or locates) a file  "OtoDecksLibrary.txt" in the documents directory from SO.
+    // Creates (or locates) a file "OtoDecksLibrary.txt" in the documents directory of the OS.
     juce::File libraryFile = juce::File::getSpecialLocation(juce::File::userDocumentsDirectory).getChildFile("OtoDecksLibrary.txt");
     
     // Opens the output flow of data.
@@ -191,10 +198,10 @@ void PlaylistComponent::saveLibrary()
     output.setPosition(0);
     output.truncate();
     
-    // Iterates from the vector and stores the path of each music.
+    // Iterates through the vector and stores the path of each track.
     for (const auto& track : tracks)
     {
-        // Collects the absolut path from windows / mac and adds a break line.
+        // Collects the absolute path from Windows / Mac and adds a line break.
         juce::String filePath = track.url.getLocalFile().getFullPathName();
         output.writeText(filePath + "\n", false, false, nullptr);
     }
@@ -202,16 +209,16 @@ void PlaylistComponent::saveLibrary()
 
 void PlaylistComponent::loadLibrary()
 {
-    // Points to the same file of persistance.
+    // Points to the same persistence file used for saving.
     juce::File libraryFile = juce::File::getSpecialLocation(juce::File::userDocumentsDirectory).getChildFile("OtoDecksLibrary.txt");
     
     if (libraryFile.existsAsFile())
     {
-        // Read all ines from file once.
+        // Read all lines from file once.
         juce::StringArray lines;
         libraryFile.readLines(lines);
         
-        // Build the objects Track and alocated in memory.
+        // Build the Track objects and allocate them in memory.
         for (juce::String line : lines)
         {
             if (line.isNotEmpty())
@@ -250,16 +257,17 @@ void PlaylistComponent::loadLibrary()
 void PlaylistComponent::textEditorTextChanged(juce::TextEditor& editor)
 {
     if (searchInput.getText().isEmpty()) {
-        // Restores everything if erase text.
+        // Restores everything if the text is erased.
         tracks = allTracks;
     } else {
         tracks.clear(); 
         for (const auto& track : allTracks) {
-            // Compares the name of the music with what was written.
+            // Compares the track title with the search input.
             if (track.title.containsIgnoreCase(searchInput.getText())) {
                 tracks.push_back(track);
             }
         }
     }
+    // Refreshing the table content to show filtered results
     tableComponent.updateContent();
 }
